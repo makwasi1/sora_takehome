@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Drive Clone",
-  description: "A modern Google Drive clone built with Next.js and ShadcnUI",
+  description: "A modern Google Drive clone built with Next.js,ShadcnUI and Supabase",
 };
 
 export default function RootLayout({
