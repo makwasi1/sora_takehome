@@ -1,21 +1,25 @@
 import { AppSideBar } from "@/components/layout/app-sidebar";
-import { Button } from "@/components/ui/button";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { PlusIcon } from "lucide-react";
-import { ReactNode } from "react";
+import { Header } from "@/components/layout/header";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <SidebarProvider>
-      <AppSideBar />
-      <main className="flex-1 overflow-auto p-4">
-        <SidebarTrigger />
-        {children}
-      </main>
+      <div className="flex h-screen">
+        <AppSideBar />
+        <div className="flex flex-col flex-1">
+          <Header />
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto max-w-7xl px-4 py-6">
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
