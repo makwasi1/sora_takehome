@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NavUser } from "./nav-user";
+import { UploadButton } from "../shared/upload-button";
 
 const items = [
     {
@@ -75,14 +76,7 @@ export function AppSideBar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-2 py-1 mb-4 mt-4 ml-2">
-              <Button
-                variant={"outline"}
-                className="w-40 h-15 justify-center gap-2"
-                size="sm"
-              >
-                <PlusIcon className="h-10 w-10" />
-                <span>New</span>
-              </Button>
+              <UploadButton />
             </div>
             <SidebarMenu className="ml-5">
               {groupedItems.map((group, groupIndex) => (

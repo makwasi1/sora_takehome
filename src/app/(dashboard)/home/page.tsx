@@ -1,9 +1,22 @@
+"use client";
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { UploadsTable } from "@/components/shared/uploads-table"
+import { useCreateFolder } from "@/hooks/use-create-folder";
+import { useEffect } from "react";
+import { Folder } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function HomePage() {
+
+  const { getFolders, folders } = useCreateFolder();
+
+  useEffect(() => {
+    getFolders();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -12,45 +25,26 @@ export default function HomePage() {
           <Input
             className="w-3/4 max-w-4xl"
             type="search"
-            placeholder="Search in Google Drive"
+            placeholder="Search in Drive"
           />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {/* Example file card */}
-          <Card className="p-4 hover:bg-accent cursor-pointer">
-            <div className="flex items-center space-x-4">
-              <div className="h-10 w-10 rounded bg-primary/10" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">Example File</p>
-                <p className="text-xs text-muted-foreground">
-                  Modified 2 days ago
-                </p>
+         {folders.map((folder) => (
+            <Card key={folder.id} className="p-4 hover:bg-accent cursor-pointer">
+              <div className="flex items-center space-x-4">
+                <div className="h-10 w-10 rounded bg-primary/1">
+                <Folder />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium">{folder.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(folder.created_at), { addSuffix: true })}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
-          <Card className="p-4 hover:bg-accent cursor-pointer">
-            <div className="flex items-center space-x-4">
-              <div className="h-10 w-10 rounded bg-primary/10" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">Example File</p>
-                <p className="text-xs text-muted-foreground">
-                  Modified 2 days ago
-                </p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 hover:bg-accent cursor-pointer">
-            <div className="flex items-center space-x-4">
-              <div className="h-10 w-10 rounded bg-primary/10" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">Example File</p>
-                <p className="text-xs text-muted-foreground">
-                  Modified 2 days ago
-                </p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          ))}
         </div>
       </div>
 

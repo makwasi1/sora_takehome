@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface AuthResponse {
   message: string
@@ -33,6 +34,7 @@ export function useAuth() {
       const data: AuthResponse = await response.json()
 
       if (!response.ok) {
+        toast.error("Registration failed. Please Try again");
         throw new Error(data.error || "Registration failed")
       }
 
@@ -65,6 +67,8 @@ export function useAuth() {
       const data: AuthResponse = await response.json()
 
       if (!response.ok) {
+        toast.error("Failed to Login. Please Try again")
+        console.log(data.error)
         throw new Error(data.error || "Login failed")
       }
 
@@ -109,5 +113,3 @@ export function useAuth() {
   }
 } 
 
-
-//logout user
