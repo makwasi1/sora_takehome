@@ -4,8 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Folder } from "./use-current-folder";
 
-
-
 export function useCreateFolder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -13,25 +11,25 @@ export function useCreateFolder() {
 
   const createFolder = async (folderName: string) => {
     setLoading(true);
-    try { 
+    try {
       if (!folderName) throw new Error("Folder name is required");
 
-        const response = await fetch("/api/folders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name: folderName }),
-        });
-      
+      const response = await fetch("/api/folders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: folderName }),
+      });
+
       const data: any = await response.json();
 
-      if(!response.ok) {
-        toast.error("Failed to create folder")
-        throw new Error(data.error || "Failed to create folder")
+      if (!response.ok) {
+        toast.error("Failed to create folder");
+        throw new Error(data.error || "Failed to create folder");
       }
-        
-      console.log("Creating folder:", folderName);
+
+      toast.success(`${folderName} uploaded successfully`);
       return data;
     } catch (error) {
       console.error("Failed to create folder:", error);
@@ -46,6 +44,12 @@ export function useCreateFolder() {
     try {
       const response = await fetch("/api/folders");
       const data = await response.json();
+
+      if (!response.ok) {
+        setError("Failed to fetch folders");
+        throw new Error(data.error || "Failed to fetch folders");
+      }
+
       setFolders(data);
     } catch (error) {
       console.error("Failed to fetch folders:", error);
@@ -57,6 +61,6 @@ export function useCreateFolder() {
     loading,
     error,
     folders,
-    getFolders
+    getFolders,
   };
 }

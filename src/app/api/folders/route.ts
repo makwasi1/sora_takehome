@@ -10,17 +10,17 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const query = supabase
       .from("folders")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (parentId) {
@@ -89,7 +89,10 @@ export async function POST(request: NextRequest) {
 // PATCH /api/folders - Update a folder
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserId();
+    const supabase = await createClient();
+    const user = await supabase.auth.getUser();
+    const userId = user.data?.user?.id as string;
+
     const { id, name, parent_id } = await request.json();
 
     if (!id) {
@@ -98,8 +101,6 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // First check if the folder belongs to the user
     const { data: existingFolder, error: fetchError } = await supabase
@@ -139,7 +140,9 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/folders - Delete a folder
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserId();
+    const supabase = await createClient();
+    const user = await supabase.auth.getUser();
+    const userId = user.data?.user?.id as string;
     const searchParams = request.nextUrl.searchParams;
     const folderId = searchParams.get("id");
 
@@ -149,8 +152,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // First check if the folder belongs to the user
     const { data: folder, error: fetchError } = await supabase
@@ -174,6 +175,7 @@ export async function DELETE(request: NextRequest) {
     if (filesError) throw filesError;
 
     if (files && files.length > 0) {
+      
       return NextResponse.json(
         { error: "Cannot delete folder with files" },
         { status: 400 }

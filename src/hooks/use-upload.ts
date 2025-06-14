@@ -5,11 +5,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { validateFile } from "@/lib/file-validation";
 import { useCurrentFolder } from "./use-current-folder";
+import { Files } from "@/lib/types/files";
+import { useParams } from "next/navigation";
 
 export function useUpload() {
+  const params = useParams();
+  const folderId = params.id as string;
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<Files[]>([]);
   const [progress, setProgress] = useState(0);
   const { currentFolder } = useCurrentFolder();
+  
 
   const handleFileSelect = () => {
     const input = document.createElement("input");
@@ -25,7 +32,6 @@ export function useUpload() {
       try {
         const supabase = createClient();
 
-        
         const user = await supabase.auth.getUser();
 
         if (user.error) {
@@ -63,7 +69,7 @@ export function useUpload() {
 
           const formData = new FormData();
           formData.append("file", file);
-          formData.append("folder_id", currentFolder?.id ?? "");
+          formData.append("folder_id", folderId);
           formData.append("storage_path", publicUrl.publicUrl);
           formData.append("mime_type", file.type);
           formData.append("size", file.size.toString());
@@ -106,12 +112,34 @@ export function useUpload() {
     input.click();
   };
 
-  const handleQueryUserFiles = () => {
-
-  }
+  const handleQueryUserFiles = async () => {
+    try {
+      const response = await fetch(
+        `/api/files?folder_id=${currentFolder?.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        setError("Failed to fetch files");
+        throw new Error(data.error || "Failed to fetch files");
+      }
+      setFiles(data);
+    } catch (error) {
+      setError("Failed to fetch files");
+      console.error("Failed to fetch folders:", error);
+    }
+  };
 
   return {
     handleFileSelect,
+    handleQueryUserFiles,
+    error,
+    files,
     uploading,
     progress,
   };

@@ -11,9 +11,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { NavUser } from "./nav-user";
 import { UploadButton } from "../shared/upload-button";
+import { getUserId } from "@/lib/auth";
+import { createClient } from "@/utils/supabase/client";
+
 
 const items = [
     {
@@ -24,7 +26,7 @@ const items = [
     {
         label: "My Drive",
         icon: FolderIcon,
-        href: "/home/new",
+        href: "/folders",
     },
     {
         label: "Shared with me",
@@ -48,15 +50,6 @@ const items = [
     }
 ];
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-};
-
-
 const groupedItems = items.reduce((groups, item, index) => {
   const groupIndex = Math.floor(index / 2);
   if (!groups[groupIndex]) {
@@ -66,7 +59,7 @@ const groupedItems = items.reduce((groups, item, index) => {
   return groups;
 }, [] as typeof items[]);
 
-export function AppSideBar() {
+export async function AppSideBar() {
   return (
     <Sidebar>
       <SidebarContent className="bg-sidebar-background">
@@ -108,7 +101,7 @@ export function AppSideBar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

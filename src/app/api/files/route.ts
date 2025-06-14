@@ -2,29 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getUserId } from "@/lib/auth";
 
-
 // GET /api/files - List files in a folder
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId();
     const searchParams = request.nextUrl.searchParams;
     const folderId = searchParams.get("folder_id");
 
-    if (!folderId) {
-      return NextResponse.json(
-        { error: "Folder ID is required" },
-        { status: 400 }
-      );
-    }
-
     const supabase = await createClient();
 
-    const { data: files, error } = await supabase
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const query = supabase
       .from("files")
       .select("*")
-      .eq("folder_id", folderId)
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
+
+    if (folderId) {
+      query.eq("folder_id", folderId);
+    } else {
+      query.is("folder_id", null);
+    }
+
+    const { data: files, error } = await query;
 
     if (error) throw error;
 
@@ -91,7 +97,10 @@ export async function POST(request: NextRequest) {
 // PATCH /api/files - Update a file
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserId();
+    const supabase = await createClient();
+
+    const user = await supabase.auth.getUser();
+    const userId = user.data?.user?.id as string;
     const { id, name, folder_id } = await request.json();
 
     if (!id) {
@@ -100,8 +109,6 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // First check if the file belongs to the user
     const { data: existingFile, error: fetchError } = await supabase
@@ -112,10 +119,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (fetchError || !existingFile) {
-      return NextResponse.json(
-        { error: "File not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     const { data: file, error } = await supabase
@@ -144,7 +148,10 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/files - Delete a file
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = await getUserId();
+    const supabase = await createClient();
+
+    const user = await supabase.auth.getUser();
+    const userId = user.data?.user?.id as string;
     const searchParams = request.nextUrl.searchParams;
     const fileId = searchParams.get("id");
 
@@ -155,8 +162,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
     // First get the file to get its storage path
     const { data: file, error: fetchError } = await supabase
       .from("files")
@@ -166,10 +171,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (fetchError || !file) {
-      return NextResponse.json(
-        { error: "File not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     // Delete from storage
@@ -198,4 +200,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

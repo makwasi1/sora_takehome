@@ -1,58 +1,177 @@
 "use client";
 
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { UploadsTable } from "@/components/shared/uploads-table"
 import { useCreateFolder } from "@/hooks/use-create-folder";
-import { useEffect } from "react";
-import { Folder } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Folder, ChevronDown, ChevronRight, Star, Clock, FileIcon as FileIconLucide } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { useCurrentFolder } from "@/hooks/use-current-folder";
+import { useUpload } from "@/hooks/use-upload";
+import { Files } from "@/lib/types/files";
+
 
 export default function HomePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const folder_id = searchParams.get("folder");
+  const { loading: foldersLoading } = useCurrentFolder();
+  const [loading, setLoading] = useState(false);
+  const [openSections, setOpenSections] = useState({
+    quickAccess: true,
+    recent: true,
+    starred: true,
+  });
+  const [files, setFiles] = useState<Files[]>([]);
 
   const { getFolders, folders } = useCreateFolder();
-
   useEffect(() => {
     getFolders();
+    if(folders.length > 0) {
+      fetchFiles();
+    }
   }, []);
 
+
+  useEffect(() => {
+    if (folders.length > 0) {
+      fetchFiles();
+    }
+  }, [folders]);
+
+  const fetchFiles = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/files?folder_id=${folders[0]?.id}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setFiles(data);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleFolderClick = (folderId: string) => {
+    router.push(`/folder/${folderId}`);
+  };
+
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex flex-col justify-center items-center space-y-4">
-          <h1 className="text-3xl font-semibold">Welcome to Drive</h1>
-          <Input
-            className="w-3/4 max-w-4xl"
-            type="search"
-            placeholder="Search in Drive"
-          />
-        </div>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <h1 className="text-3xl mb-4 text-center">Welcome to Drive</h1>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-         {folders.map((folder) => (
-            <Card key={folder.id} className="p-4 hover:bg-accent cursor-pointer">
-              <div className="flex items-center space-x-4">
-                <div className="h-10 w-10 rounded bg-primary/1">
-                <Folder />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">{folder.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(folder.created_at), { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div className="max-w-2xl mx-auto mb-8">
+        <Input className="w-full" type="search" placeholder="Search in Drive" />
       </div>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Recent Uploads</h1>
-      </div>
+      <div className="">
+        <Collapsible
+          open={openSections.quickAccess}
+          onOpenChange={() => toggleSection("quickAccess")}
+          className="space-y-2"
+        >
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                {openSections.quickAccess ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <span className="font-medium">Suggested Folders</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {foldersLoading ? (
+                <div className="text-center py-4">Loading folders...</div>
+              ) : folders.length > 0 ? (
+                folders.map((folder: any) => (
+                  <Card
+                    key={folder.id}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-accent  ${
+                      folder_id === folder.id ? "bg-accent" : ""
+                    }`}
+                    onClick={() => handleFolderClick(folder.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Folder className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {folder.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(folder.created_at), {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                null
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-      <UploadsTable />
+        {/* Suggested Files Section */}
+        <Collapsible
+          open={openSections.recent}
+          onOpenChange={() => toggleSection("recent")}
+          className="space-y-2 mt-5"
+        >
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                {openSections.recent ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <span className="font-medium">Suggested Files</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <div className="grid gap-2">
+              {loading ? (
+                <div className="text-center py-4">Loading files...</div>
+              ) : files.length > 0 ? (
+                <UploadsTable files={files as Files[]} onFileUpdate={fetchFiles} />
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  No files yet. Upload some files to get started.
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </div>
   );
 } 
+
+ 

@@ -28,11 +28,11 @@ export function useCurrentFolder() {
           return;
         }
 
-        // Get or create root folder for user
         const { data: folders, error: fetchError } = await supabase
           .from("folders")
           .select("*")
           .eq("user_id", session.user.id)
+          .eq("name", "My Drive")
           .is("parent_id", null)
           .limit(1);
 
@@ -42,22 +42,35 @@ export function useCurrentFolder() {
           setCurrentFolder(folders[0]);
           setFolderHistory([folders[0]]);
         } else {
-          // Create root folder if it doesn't exist
-          const { data: newFolder, error: createError } = await supabase
+          const { data: existingRootFolders, error: rootError } = await supabase
             .from("folders")
-            .insert([
-              {
-                name: "My Drive",
-                user_id: session.user.id,
-                parent_id: null,
-              },
-            ])
-            .select()
-            .single();
+            .select("*")
+            .eq("user_id", session.user.id)
+            .is("parent_id", null)
+            .limit(1);
 
-          if (createError) throw createError;
-          setCurrentFolder(newFolder);
-          setFolderHistory([newFolder]);
+          if (rootError) throw rootError;
+
+          if (existingRootFolders && existingRootFolders.length > 0) {
+            setCurrentFolder(existingRootFolders[0]);
+            setFolderHistory([existingRootFolders[0]]);
+          } else {
+            const { data: newFolder, error: createError } = await supabase
+              .from("folders")
+              .insert([
+                {
+                  name: "My Drive",
+                  user_id: session.user.id,
+                  parent_id: null,
+                },
+              ])
+              .select()
+              .single();
+
+            if (createError) throw createError;
+            setCurrentFolder(newFolder);
+            setFolderHistory([newFolder]);
+          }
         }
       } catch (err) {
         console.error("Error loading folder:", err);
