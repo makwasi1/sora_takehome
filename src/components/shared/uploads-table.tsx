@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Download, Share2, Star, Trash2, Eye, Pencil } from "lucide-react";
+import { MoreVertical, Trash2, Eye, Pencil } from "lucide-react";
 import { Files } from "@/lib/types/files";
 import { FileIcon } from "@/components/shared/file-icon";
 import { formatDistanceToNow } from "date-fns";

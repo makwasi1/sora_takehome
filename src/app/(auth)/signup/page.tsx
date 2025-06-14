@@ -44,7 +44,7 @@ export default function SignUpPage() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            We've sent you a verification link to {email}
+            We have sent you a verification link to {email}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -4,7 +4,6 @@ import { createClient } from "@/utils/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { validateFile } from "@/lib/file-validation";
-import { Files } from "@/lib/types/files";
 import { useParams } from "next/navigation";
 
 export function useUpload() {

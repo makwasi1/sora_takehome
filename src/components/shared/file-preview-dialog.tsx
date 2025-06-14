@@ -10,6 +10,7 @@ import { FileIcon } from "@/components/shared/file-icon";
 import { formatDistanceToNow } from "date-fns";
 import { Files } from "@/lib/types/files";
 import { useState } from "react";
+import Image from "next/image";
 
 interface FilePreviewDialogProps {
   file: Files | null;
@@ -41,7 +42,7 @@ export function FilePreviewDialog({
     // Handle images
     if (file.mime_type.startsWith("image/")) {
       return (
-        <img
+        <Image
           src={file.storage_path}
           alt={file.name}
           className="max-w-full max-h-[600px] object-contain"

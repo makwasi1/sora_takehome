@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, FolderPlus, Upload } from "lucide-react";
+import { Plus, FolderPlus } from "lucide-react";
 
 import { useState } from "react";
 import { CreateFolderDialog } from "./create-folder-dialog";

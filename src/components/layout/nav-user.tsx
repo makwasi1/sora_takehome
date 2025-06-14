@@ -1,7 +1,7 @@
 "use client";
 
-import { EllipsisVertical, LogOut, User, User2Icon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { EllipsisVertical, LogOut, User2Icon } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,6 @@ const [user, setUser] = useState<any>(null);
     const supabase = createClient();
     const user = await supabase.auth.getUser();
     setUser(user.data.user);
-    console.log("user", user)
   }
 
   const { isMobile } = useSidebar();

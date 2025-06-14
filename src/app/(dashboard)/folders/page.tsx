@@ -93,9 +93,9 @@ export default function FoldersPage() {
 
       toast.success("Folder deleted successfully");
       getFolders();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting folder:", error);
-      toast.error(error.message);
+      toast.error("Failed to delete folder");
     }
   };
 

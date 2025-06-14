@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
                 },
                 setAll(cookiesToSet) {
                     try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
+                        cookiesToSet.forEach(() =>
                             supabaseResponse = NextResponse.next({
                                 request
                             })

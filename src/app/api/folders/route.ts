@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { getUserId } from "@/lib/auth";
 
 // GET /api/folders - List folders
 export async function GET(request: NextRequest) {

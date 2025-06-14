@@ -7,7 +7,7 @@ import { useCreateFolder } from "@/hooks/use-create-folder";
 import { useEffect, useState } from "react";
 import { Folder, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   Collapsible,
@@ -21,8 +21,6 @@ import { UploadFolder } from "@/lib/types/folders";
 
 export default function HomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const folder_id = searchParams.get("folder");
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
     quickAccess: true,
@@ -30,7 +28,6 @@ export default function HomePage() {
     starred: true,
   });
   const [files, setFiles] = useState<Files[]>([]);
-  const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Files[]>([]);
   const { getFolders, folders, loading: folderLoading } = useCreateFolder();
 
@@ -72,7 +69,6 @@ export default function HomePage() {
   };
 
   const handleSimpleSearch = (query: string ) => {
-    setSearch(query);
 
     if(!query.trim()){
       setSearchResults(files);
@@ -126,9 +122,7 @@ export default function HomePage() {
                 folders.slice(0, 4).map((folder: UploadFolder) => (
                   <Card
                     key={folder.id}
-                    className={`p-4 cursor-pointer transition-colors hover:bg-accent  ${
-                      folder_id === folder.id ? "bg-accent" : ""
-                    }`}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-accent `}
                     onClick={() => handleFolderClick(folder)}
                   >
                     <div className="flex items-center gap-3">
