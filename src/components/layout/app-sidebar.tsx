@@ -1,4 +1,4 @@
-import { ClockIcon, FolderIcon, HomeIcon, PlusIcon, Share2Icon, StarIcon, TrashIcon } from "lucide-react";
+import { ClockIcon, FolderIcon, HomeIcon, Share2Icon, StarIcon, TrashIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,8 +13,6 @@ import {
 import Link from "next/link";
 import { NavUser } from "./nav-user";
 import { UploadButton } from "../shared/upload-button";
-import { getUserId } from "@/lib/auth";
-import { createClient } from "@/utils/supabase/client";
 
 
 const items = [
@@ -24,29 +22,29 @@ const items = [
         href: "/home",
     },
     {
-        label: "My Drive",
+        label: "My Folders",
         icon: FolderIcon,
         href: "/folders",
     },
     {
         label: "Shared with me",
         icon: Share2Icon,
-        href: "/home/shared",
+        href: "#",
     },
     {
         label: "Recent",
         icon: ClockIcon,
-        href: "/home/recent",
+        href: "#",
     },
     {
         label: "Starred",
         icon: StarIcon,
-        href: "/home/starred",
+        href: "#",
     },
     {
         label: "Trash",
         icon: TrashIcon,
-        href: "/home/trash",
+        href: "#h",
     }
 ];
 
@@ -65,7 +63,7 @@ export async function AppSideBar() {
       <SidebarContent className="bg-sidebar-background">
         <SidebarGroup>
           <SidebarGroupLabel className="text-2xl font-bold text-center mt-8 ml-2">
-            Drive
+            Super Drive
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-2 py-1 mb-4 mt-4 ml-2">

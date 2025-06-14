@@ -5,18 +5,17 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { useUpload } from "@/hooks/use-upload";
-import { useCurrentFolder } from "@/hooks/use-current-folder";
 import { UploadProgress } from "@/components/shared/upload-progress";
 import { UploadsTable } from "@/components/shared/uploads-table";
 import { Files } from "@/lib/types/files";
+import { getFilenameFromLocalStorage } from "@/lib/utils";
 
 export default function FolderPage() {
   const params = useParams();
   const folderId = params.id as string;
   const [files, setFiles] = useState<Files[]>([]);
   const [loading, setLoading] = useState(true);
-  const { currentFolder } = useCurrentFolder();
-  const { handleFileSelect, uploading, progress } = useUpload();
+  const { handleFileSelect, uploading, progress, uploadedFiles, totalFiles } = useUpload();
 
   const fetchFiles = async () => {
     try {
@@ -34,13 +33,21 @@ export default function FolderPage() {
 
   useEffect(() => {
     fetchFiles();
-  }, [folderId]);
+  }, [folderId, progress]);
+
+  // Refresh files when all uploads are completed
+  useEffect(() => {
+    if (!uploading && uploadedFiles > 0 && uploadedFiles === totalFiles) {
+      fetchFiles();
+    }
+  }, [uploading, uploadedFiles, totalFiles]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Action Buttons */}
       <div className="flex gap-4 mb-6 justify-between">
-        <h1 className="text-2xl mb-4 text-center">{currentFolder?.name}</h1>
+        <h1 className="text-2xl mb-4 text-center">
+          {getFilenameFromLocalStorage() || "My Drive"}
+        </h1>
         <Button
           variant="outline"
           className="gap-2"

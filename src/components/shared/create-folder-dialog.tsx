@@ -10,13 +10,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useCreateFolder } from "@/hooks/use-create-folder";
 import { useState } from "react";
 
 interface CreateFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string) => Promise<void>;
 }
 
 export function CreateFolderDialog({
@@ -25,16 +24,21 @@ export function CreateFolderDialog({
   onSubmit,
 }: CreateFolderDialogProps) {
   const [folderName, setFolderName] = useState("");
-  const { createFolder, loading } = useCreateFolder();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!folderName.trim()) return;
+    
+    setLoading(true);
     try {
-      await createFolder(folderName);
+      await onSubmit(folderName);
       setFolderName("");
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create folder:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +68,7 @@ export function CreateFolderDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !folderName}>
+            <Button type="submit" disabled={loading || !folderName.trim()}>
               {loading ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>

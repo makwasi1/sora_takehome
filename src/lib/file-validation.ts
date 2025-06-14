@@ -39,7 +39,7 @@ export function validateFile(file: File): FileValidationError | null {
   if (file.size > MAX_FILE_SIZE) {
     errors.push({
       code: 'SIZE_LIMIT',
-      message: `File size exceeds 100MB limit`,
+      message: `File size exceeds 10MB limit`,
     });
   }
 

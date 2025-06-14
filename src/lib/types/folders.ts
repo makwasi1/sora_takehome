@@ -1,4 +1,5 @@
-export interface Folder {
+
+export interface UploadFolder {
   id: string;
   name: string;
   parent_id: string | null;

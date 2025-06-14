@@ -4,7 +4,6 @@ import { createClient } from "@/utils/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { validateFile } from "@/lib/file-validation";
-import { useCurrentFolder } from "./use-current-folder";
 import { Files } from "@/lib/types/files";
 import { useParams } from "next/navigation";
 
@@ -12,11 +11,9 @@ export function useUpload() {
   const params = useParams();
   const folderId = params.id as string;
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [files, setFiles] = useState<Files[]>([]);
   const [progress, setProgress] = useState(0);
-  const { currentFolder } = useCurrentFolder();
-  
+  const [uploadedFiles, setUploadedFiles] = useState<number>(0);
+  const [totalFiles, setTotalFiles] = useState<number>(0);
 
   const handleFileSelect = () => {
     const input = document.createElement("input");
@@ -28,6 +25,8 @@ export function useUpload() {
 
       setUploading(true);
       setProgress(0);
+      setUploadedFiles(0);
+      setTotalFiles(files.length);
 
       try {
         const supabase = createClient();
@@ -40,15 +39,11 @@ export function useUpload() {
           return;
         }
 
-        if (!currentFolder) {
-          console.info("No current folder");
-        }
-
-        for (const file of Array.from(files)) {
+        const uploadPromises = Array.from(files).map(async (file) => {
           const validationError = validateFile(file);
           if (validationError) {
             toast.error(validationError.message);
-            continue;
+            return;
           }
 
           const storagePath = `${user.data.user.id}/${Date.now()}-${file.name}`;
@@ -60,7 +55,7 @@ export function useUpload() {
           if (uploadError) {
             console.error("Upload failed:", uploadError);
             toast.error(`Failed to upload ${file.name}`);
-            continue;
+            return;
           }
 
           const { data: publicUrl } = await supabase.storage
@@ -74,73 +69,60 @@ export function useUpload() {
           formData.append("mime_type", file.type);
           formData.append("size", file.size.toString());
 
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/api/files");
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/files");
 
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const percentComplete = (event.loaded / event.total) * 100;
-              setProgress(percentComplete);
-            }
-          };
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                setProgress(percentComplete);
+              }
+            };
 
-          xhr.onload = () => {
-            if (xhr.status === 200) {
-              toast.success(`${file.name} uploaded successfully`);
-            } else if (xhr.status === 401) {
-              toast.error("Please sign in to upload files");
-            } else {
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                toast.success(`${file.name} uploaded successfully`);
+                setUploadedFiles(prev => prev + 1);
+                resolve(true);
+              } else if (xhr.status === 401) {
+                toast.error("Please sign in to upload files");
+                reject(new Error("Authentication required"));
+              } else {
+                toast.error(`Failed to upload ${file.name}`);
+                reject(new Error("Upload failed"));
+              }
+            };
+
+            xhr.onerror = () => {
               toast.error(`Failed to upload ${file.name}`);
-            }
-          };
+              reject(new Error("Upload failed"));
+            };
 
-          xhr.onerror = () => {
-            toast.error(`Failed to upload ${file.name}`);
-          };
+            xhr.send(formData);
+          });
+        });
 
-          xhr.send(formData);
-        }
+        await Promise.all(uploadPromises);
       } catch (error) {
         console.error("Upload failed:", error);
         toast.error("Upload failed");
       } finally {
         setUploading(false);
         setProgress(0);
+        setUploadedFiles(0);
+        setTotalFiles(0);
       }
     };
 
     input.click();
   };
 
-  const handleQueryUserFiles = async () => {
-    try {
-      const response = await fetch(
-        `/api/files?folder_id=${currentFolder?.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) {
-        setError("Failed to fetch files");
-        throw new Error(data.error || "Failed to fetch files");
-      }
-      setFiles(data);
-    } catch (error) {
-      setError("Failed to fetch files");
-      console.error("Failed to fetch folders:", error);
-    }
-  };
-
   return {
     handleFileSelect,
-    handleQueryUserFiles,
-    error,
-    files,
     uploading,
     progress,
+    uploadedFiles,
+    totalFiles,
   };
 }

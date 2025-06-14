@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "lucide-react";
 import { useCreateFolder } from "@/hooks/use-create-folder";
-import { Folder, useCurrentFolder } from "@/hooks/use-current-folder";
 import { toast } from "sonner";
 import { CreateFolderDialog } from "@/components/shared/create-folder-dialog";
 import { RenameDialog } from "@/components/shared/rename-dialog";
@@ -25,13 +24,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Folder as FolderIcon, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { UploadFolder } from "@/lib/types/folders";
+import { saveFilenameToLocalStorage } from "@/lib/utils";
 
 export default function FoldersPage() {
   const router = useRouter();
   const [showCreateFolder, setShowCreateFolder] = useState(false);
-  const { loading: foldersLoading } = useCurrentFolder();
-  const [renameFolder, setRenameFolder] = useState<Folder | null>(null);
-  const { getFolders, createFolder, folders } = useCreateFolder();
+  const [renameFolder, setRenameFolder] = useState<UploadFolder | null>(null);
+  const { getFolders, createFolder, folders, loading } = useCreateFolder();
 
   useEffect(() => {
     getFolders();
@@ -39,7 +39,7 @@ export default function FoldersPage() {
 
   const handleCreateFolder = async (name: string) => {
     try {
-      await createFolder(name);
+     await createFolder(name);
       setShowCreateFolder(false);
       getFolders();
       toast.success("Folder created successfully");
@@ -99,6 +99,12 @@ export default function FoldersPage() {
     }
   };
 
+
+  const handleFolderClick = (folder: UploadFolder) => {
+    saveFilenameToLocalStorage(folder.name);
+    router.push(`/folder/${folder.id}`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
@@ -126,7 +132,7 @@ export default function FoldersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {foldersLoading ? (
+            {loading ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-4">
                   Loading folders...
@@ -140,7 +146,7 @@ export default function FoldersPage() {
                   </TableCell>
                   <TableCell
                     className="font-medium cursor-pointer hover:text-primary"
-                    onClick={() => router.push(`/folder/${folder.id}`)}
+                    onClick={() => handleFolderClick(folder)}
                   >
                     {folder.name}
                   </TableCell>

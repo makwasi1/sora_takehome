@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected pages, redirect to signup
   if (!user && !isAuthPage) {
-    return NextResponse.redirect(new URL("/signup", request.url))
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
   return response

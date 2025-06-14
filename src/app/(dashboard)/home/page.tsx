@@ -1,11 +1,11 @@
 "use client";
 
-import { Card } from "@/components/ui/card"
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { UploadsTable } from "@/components/shared/uploads-table"
+import { UploadsTable } from "@/components/shared/uploads-table";
 import { useCreateFolder } from "@/hooks/use-create-folder";
 import { useEffect, useState } from "react";
-import { Folder, ChevronDown, ChevronRight, Star, Clock, FileIcon as FileIconLucide } from "lucide-react";
+import { Folder, ChevronDown, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -15,16 +15,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { useCurrentFolder } from "@/hooks/use-current-folder";
-import { useUpload } from "@/hooks/use-upload";
 import { Files } from "@/lib/types/files";
-
+import { saveFilenameToLocalStorage } from "@/lib/utils";
+import { UploadFolder } from "@/lib/types/folders";
 
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const folder_id = searchParams.get("folder");
-  const { loading: foldersLoading } = useCurrentFolder();
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
     quickAccess: true,
@@ -32,15 +30,13 @@ export default function HomePage() {
     starred: true,
   });
   const [files, setFiles] = useState<Files[]>([]);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Files[]>([]);
+  const { getFolders, folders, loading: folderLoading } = useCreateFolder();
 
-  const { getFolders, folders } = useCreateFolder();
   useEffect(() => {
     getFolders();
-    if(folders.length > 0) {
-      fetchFiles();
-    }
   }, []);
-
 
   useEffect(() => {
     if (folders.length > 0) {
@@ -55,6 +51,7 @@ export default function HomePage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setFiles(data);
+      setSearchResults(data);
     } catch (error) {
       console.error("Error fetching files:", error);
     } finally {
@@ -63,23 +60,44 @@ export default function HomePage() {
   };
 
   const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({
+    setOpenSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
-  const handleFolderClick = (folderId: string) => {
-    router.push(`/folder/${folderId}`);
+  const handleFolderClick = (folder: UploadFolder) => {
+    saveFilenameToLocalStorage(folder.name);
+    router.push(`/folder/${folder.id}`);
   };
 
+  const handleSimpleSearch = (query: string ) => {
+    setSearch(query);
+
+    if(!query.trim()){
+      setSearchResults(files);
+      return
+    }
+
+    const filteredFiles = files.filter((file) =>
+      file.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setSearchResults(filteredFiles);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <h1 className="text-3xl mb-4 text-center">Welcome to Drive</h1>
 
       <div className="max-w-2xl mx-auto mb-8">
-        <Input className="w-full" type="search" placeholder="Search in Drive" />
+        <Input
+          className="w-full"
+          type="search"
+          onChange={(e) => {
+            handleSimpleSearch(e.target.value);
+          }}
+          placeholder="Search in Drive"
+        />
       </div>
 
       <div className="">
@@ -102,16 +120,16 @@ export default function HomePage() {
           </div>
           <CollapsibleContent>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {foldersLoading ? (
+              {folderLoading ? (
                 <div className="text-center py-4">Loading folders...</div>
               ) : folders.length > 0 ? (
-                folders.map((folder: any) => (
+                folders.slice(0, 4).map((folder: UploadFolder) => (
                   <Card
                     key={folder.id}
                     className={`p-4 cursor-pointer transition-colors hover:bg-accent  ${
                       folder_id === folder.id ? "bg-accent" : ""
                     }`}
-                    onClick={() => handleFolderClick(folder.id)}
+                    onClick={() => handleFolderClick(folder)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-primary/10 rounded-lg">
@@ -130,9 +148,7 @@ export default function HomePage() {
                     </div>
                   </Card>
                 ))
-              ) : (
-                null
-              )}
+              ) : null}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -159,8 +175,11 @@ export default function HomePage() {
             <div className="grid gap-2">
               {loading ? (
                 <div className="text-center py-4">Loading files...</div>
-              ) : files.length > 0 ? (
-                <UploadsTable files={files as Files[]} onFileUpdate={fetchFiles} />
+              ) : searchResults.length > 0 ? (
+                <UploadsTable
+                  files={searchResults ?? files as Files[]}
+                  onFileUpdate={fetchFiles}
+                />
               ) : (
                 <div className="text-center text-muted-foreground py-4">
                   No files yet. Upload some files to get started.
@@ -172,6 +191,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-} 
-
- 
+}

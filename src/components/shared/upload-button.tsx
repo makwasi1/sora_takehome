@@ -10,10 +10,21 @@ import { Plus, FolderPlus, Upload } from "lucide-react";
 
 import { useState } from "react";
 import { CreateFolderDialog } from "./create-folder-dialog";
+import { useCreateFolder } from "@/hooks/use-create-folder";
 
 
 export function UploadButton() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const { createFolder } = useCreateFolder();
+
+  const handleCreateFolder = async (name: string) => {
+    try {
+      await createFolder(name);
+      setShowCreateFolder(false);
+    } catch (error) {
+      console.error("Failed to create folder:", error);
+    }
+  };
   return (
     <>
       <Popover>
@@ -40,7 +51,7 @@ export function UploadButton() {
       <CreateFolderDialog
         open={showCreateFolder}
         onOpenChange={setShowCreateFolder}
-        onSubmit={() => setShowCreateFolder(false)}
+        onSubmit={handleCreateFolder}
       />
     </>
   );

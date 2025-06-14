@@ -1,13 +1,14 @@
 "use client";
 
+import { UploadFolder } from "@/lib/types/folders";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Folder } from "./use-current-folder";
+
 
 export function useCreateFolder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [folders, setFolders] = useState<Folder[]>([]);
+  const [folders, setFolders] = useState<UploadFolder[]>([]);
 
   const createFolder = async (folderName: string) => {
     setLoading(true);
@@ -29,7 +30,8 @@ export function useCreateFolder() {
         throw new Error(data.error || "Failed to create folder");
       }
 
-      toast.success(`${folderName} uploaded successfully`);
+      setFolders(prevFolders => [data, ...prevFolders]);
+      toast.success(`${folderName} created successfully`);
       return data;
     } catch (error) {
       console.error("Failed to create folder:", error);

@@ -8,7 +8,6 @@ export async function POST(request: Request) {
     console.log(email, password, fullName)
     const supabase = await createClient();
 
-    // Register the user with email verification
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -16,7 +15,7 @@ export async function POST(request: Request) {
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/login`,
       },
     })
 
@@ -26,24 +25,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
-    // // Create a profile record in the profiles table
-    // const { error: profileError } = await supabase
-    //   .from("profiles")
-    //   .insert([
-    //     {
-    //       id: authData.user?.id,
-    //       full_name: fullName,
-    //       email: email,
-    //     },
-    //   ])
-
-    // if (profileError) {
-    //   return NextResponse.json(
-    //     { error: profileError.message },
-    //     { status: 400 }
-    //   )
-    // }
 
     return NextResponse.json(
       { 
